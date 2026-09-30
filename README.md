@@ -1,117 +1,40 @@
-# SQL Query Investigation Agent
+# SQL Sentinel AI
 
-A Streamlit agent inspired by the structure of the referenced `AI-Cybersecurity-Assistant` repository. The original repository uses Streamlit plus Groq for an AI analysis interface; this project applies the same lightweight pattern to the supplied problem statement: **given a database and a natural-language question, generate SQL, inspect the results, validate the answer, revise when necessary, and generate automated tests.**
+A Streamlit SQL investigation and defensive query-analysis application.
 
 ## Features
 
-- Natural-language to SQL generation
-- Automatic SQLite schema discovery
-- Sample-row inspection for schema grounding
-- Read-only SQL enforcement
-- `EXPLAIN QUERY PLAN` before accepting a query
-- Real query execution with result limiting
-- LLM-based answer validation
-- Automatic SQL revision loop
-- Investigation trace showing each attempt
-- Automated read-only test generation
-- Test execution from the UI
-- Upload your own SQLite database
+- Completely redesigned cybersecurity/SOC-style UI
+- Natural-language to SQL investigation agent
+- Read-only SQL execution gate
+- SQL threat scanner with a 0-100 risk score
+- Detection of destructive operations, stacked statements, tautologies, UNION-based patterns, SQL comments/obfuscation, time-delay functions, high-risk database capabilities and schema enumeration
+- Security scan before generated SQL is executed
+- AI result validation and iterative SQL revision
+- SQLite demo security database
+- SQLite upload support
+- Investigation history
+- Schema explorer
 
-## Architecture
-
-```text
-Natural-language question
-          |
-          v
-   Schema Inspector
-          |
-          v
-   SQL Generator (LLM)
-          |
-          v
- Read-only SQL Validator
-          |
-          v
- EXPLAIN QUERY PLAN
-          |
-          v
- Controlled SQL Executor
-          |
-          v
-    Result Inspector
-          |
-       +--+--+
-       |     |
-    valid   invalid
-       |     |
-       v     v
-   Final   SQL Revision
-   Answer      |
-       |       +----> re-execute
-       v
- Test Generator
-       |
-       v
- Automated Tests
-```
-
-## Setup
-
-### Windows PowerShell
-
-```powershell
-cd sql_query_investigation_agent
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-$env:GROQ_API_KEY="YOUR_GROQ_API_KEY"
-streamlit run app.py
-```
-
-### Linux/Kali
+## Run locally
 
 ```bash
-cd sql_query_investigation_agent
-python3 -m venv .venv
-source .venv/bin/activate
 pip install -r requirements.txt
-export GROQ_API_KEY="YOUR_GROQ_API_KEY"
 streamlit run app.py
 ```
 
-## Example questions
+Set `GROQ_API_KEY` as an environment variable or Streamlit secret for AI investigation.
 
-With the included sample security database:
+## Streamlit Cloud
 
-- `Which employees had failed login attempts outside business hours?`
-- `Which countries produced the most failed login attempts?`
-- `Show the failure rate by department.`
-- `Find usernames with more than one failed login.`
-- `Which failed logins came from countries other than India?`
+Add this to App Settings -> Secrets:
 
-## Safety model
+```toml
+GROQ_API_KEY = "your-key"
+```
 
-The application blocks non-read-only statements and multiple statements before execution. For production databases, use a database account that has only the permissions required for investigation queries. The LLM validator is an additional semantic check; it should not be treated as a replacement for database access controls.
+Threat Scanner works without the AI key. Natural-language investigation requires the key.
 
-## Project mapping to the supplied PS
+## Security note
 
-| PS requirement | Implementation |
-|---|---|
-| Given a database | SQLite upload or built-in sample DB |
-| Natural-language question | Streamlit question box |
-| Generate a query | Groq-powered SQL generator |
-| Inspect results | Controlled execution + result preview |
-| Validate answer | LLM result validator |
-| Revise when necessary | Automatic revision loop, configurable attempts |
-| Controlled SQL execution | SELECT/WITH allow-list + forbidden-operation checks + EXPLAIN |
-| Automated test generation | LLM-generated read-only tests |
-
-## Important production upgrades
-
-- Use PostgreSQL/MySQL with a dedicated read-only database user.
-- Add AST-based SQL parsing for stronger validation.
-- Add query timeout and resource limits at the database layer.
-- Add schema/table allow-lists.
-- Add query audit logs.
-- Add a benchmark set of natural-language questions with expected answers.
-- Add deterministic result validators alongside the LLM validator.
+The scanner is a defensive heuristic layer. It should not be treated as a complete SQL injection detector. For production deployments, use a dedicated read-only database account, database-side permissions, resource limits, logging, and network controls.
